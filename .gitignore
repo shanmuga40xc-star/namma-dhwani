@@ -1,0 +1,11 @@
+node_modules/
+build/
+dist/
+citizen-app/dist/
+admin-app/dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.nagrik-totp-vault.json

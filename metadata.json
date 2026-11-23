@@ -1,0 +1,6 @@
+{
+  "name": "Namma Dhwani",
+  "description": "Your Voice. Your City. Your Impact. Civic reporting and welfare portal for Karnataka.",
+  "requestFramePermissions": ["geolocation", "microphone", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

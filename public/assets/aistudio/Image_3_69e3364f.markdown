@@ -1,0 +1,222 @@
+---
+name: Civic Authority
+colors:
+  surface: '#f7f9ff'
+  surface-dim: '#c9dcf0'
+  surface-bright: '#f7f9ff'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#ecf4ff'
+  surface-container: '#e1efff'
+  surface-container-high: '#d7eafe'
+  surface-container-highest: '#d2e5f8'
+  on-surface: '#0a1d2b'
+  on-surface-variant: '#43474d'
+  inverse-surface: '#203241'
+  inverse-on-surface: '#e7f2ff'
+  outline: '#74777e'
+  outline-variant: '#c3c6ce'
+  surface-tint: '#49607c'
+  primary: '#00152a'
+  on-primary: '#ffffff'
+  primary-container: '#102a43'
+  on-primary-container: '#7a92b0'
+  inverse-primary: '#b0c9e8'
+  secondary: '#006d40'
+  on-secondary: '#ffffff'
+  secondary-container: '#8ff8b7'
+  on-secondary-container: '#007444'
+  tertiary: '#211100'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#3d2300'
+  on-tertiary-container: '#c7811d'
+  error: '#ba1a1a'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#d1e4ff'
+  primary-fixed-dim: '#b0c9e8'
+  on-primary-fixed: '#011d35'
+  on-primary-fixed-variant: '#314863'
+  secondary-fixed: '#8ff8b7'
+  secondary-fixed-dim: '#73db9d'
+  on-secondary-fixed: '#002110'
+  on-secondary-fixed-variant: '#00522f'
+  tertiary-fixed: '#ffddb9'
+  tertiary-fixed-dim: '#ffb963'
+  on-tertiary-fixed: '#2b1700'
+  on-tertiary-fixed-variant: '#663e00'
+  background: '#f7f9ff'
+  on-background: '#0a1d2b'
+  surface-variant: '#d2e5f8'
+typography:
+  display-lg:
+    fontFamily: Work Sans
+    fontSize: 40px
+    fontWeight: '700'
+    lineHeight: 48px
+    letterSpacing: -0.02em
+  display-lg-mobile:
+    fontFamily: Work Sans
+    fontSize: 30px
+    fontWeight: '700'
+    lineHeight: 38px
+    letterSpacing: -0.01em
+  headline-lg:
+    fontFamily: Work Sans
+    fontSize: 32px
+    fontWeight: '600'
+    lineHeight: 40px
+    letterSpacing: -0.01em
+  headline-lg-mobile:
+    fontFamily: Work Sans
+    fontSize: 24px
+    fontWeight: '600'
+    lineHeight: 32px
+    letterSpacing: 0em
+  headline-md:
+    fontFamily: Work Sans
+    fontSize: 22px
+    fontWeight: '600'
+    lineHeight: 28px
+  headline-sm:
+    fontFamily: Work Sans
+    fontSize: 18px
+    fontWeight: '600'
+    lineHeight: 24px
+  title-md:
+    fontFamily: Work Sans
+    fontSize: 16px
+    fontWeight: '500'
+    lineHeight: 22px
+  body-lg:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: '400'
+    lineHeight: 24px
+  body-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: '400'
+    lineHeight: 20px
+  body-sm:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: '400'
+    lineHeight: 16px
+  label-lg:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: '600'
+    lineHeight: 18px
+    letterSpacing: 0.01em
+  label-md:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: '600'
+    lineHeight: 16px
+    letterSpacing: 0.02em
+  label-sm:
+    fontFamily: Inter
+    fontSize: 10px
+    fontWeight: '700'
+    lineHeight: 14px
+    letterSpacing: 0.05em
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  gutter: 1rem
+  gutter-desktop: 1.5rem
+  margin: 1rem
+  margin-desktop: 2rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 1rem
+  space-lg: 1.5rem
+  space-xl: 2rem
+  space-2xl: 3rem
+---
+
+## Brand & Style
+
+This design system establishes an authoritative, reliable, and high-clarity civic framework. Built for institutional governance, smart municipal operations, and high-stakes citizen engagement, the visual style prioritizes legibility, procedural transparency, and structural accountability over decorative embellishment.
+
+The visual direction combines crisp corporate modernism with high-contrast structural layouts. It projects stability and civic responsibility through balanced white space, disciplined vertical cadence, and meticulous status indicators. Interfaces present complex civic data—such as infrastructure incidents, ward allocations, and SLA resolutions—without ambiguity or visual clutter.
+
+## Colors
+
+The palette is anchored in authoritative institutional blues paired with functional civic signals:
+
+- **Primary (`#102A43`)**: Deep Navy Blue communicates formal authority, procedural integrity, and administrative permanence. Used for primary top-level navigation, key actions, high-emphasis text, and institutional headers.
+- **Secondary (`#168B55`)**: Civic Green signifies confirmed verification, successful resolution, open infrastructure, and positive operational movement. Paired with tint `#E8F5EC` for resolved state containers and pass-level badges.
+- **Tertiary (`#F2A541`)**: Saffron Accent provides high-visibility caution, active routing indicators, in-progress tasks, and critical civic notices without aggressive panic.
+- **Neutral (`#253746`)**: Charcoal Slate delivers high-contrast legibility for body text, form elements, and structured metadata. 
+
+Background surfaces rely on crisp `#F5F7FA` canvas gray layered with pure white (`#FFFFFF`) cards to ensure maximum contrast ratios meeting strict accessibility requirements.
+
+## Typography
+
+Typography establishes uncompromised administrative hierarchy:
+
+- **Headlines & Display (Work Sans)**: Direct, structured, and legible at all scales. Its solid geometric proportions provide civic gravitas without becoming overly technical or sterile.
+- **Body & Data Displays (Inter)**: Delivers unmatched neutral clarity for continuous text, form inputs, audit trails, and multi-language tabular data. Tall x-height and clear distinction between glyphs ensure rapid comprehension in mobile field usage.
+
+Letter spacing is intentionally tightened for large display titles to reinforce authority, while micro-labels and status indicators feature positive tracking for immediate legibility at small sizes.
+
+## Layout & Spacing
+
+The layout is built around a structured 12-column grid on desktop and tablet, converting to an adaptable 4-column system on mobile devices.
+
+- **Breakpoints**: 
+  - Mobile: `< 640px` (4 columns, `margin`: 1rem, `gutter`: 1rem)
+  - Tablet: `640px – 1024px` (8 columns, `margin`: 1.5rem, `gutter`: 1rem)
+  - Desktop: `> 1024px` (12 columns, max-width: 1280px, `margin-desktop`: 2rem, `gutter-desktop`: 1.5rem)
+
+Spacing follows a strict 8pt base grid with a 4pt micro-increment (`space-xs`). Layout containers conform to consistent vertical stacks where cards, forms, and data grids rely strictly on defined spacing tokens for interior rhythm, ensuring touch targets remain minimum 48px on mobile viewports.
+
+## Elevation & Depth
+
+To maintain an administrative, objective aesthetic, this design system minimizes heavy artificial drop shadows in favor of precise structural boundaries, tonal surfaces, and crisp borders.
+
+1. **Flat Base**: Canvas uses `#F5F7FA`. Main content surfaces, cards, and panels sit on `#FFFFFF` bordered by a 1px solid hairline edge (`rgba(16, 42, 67, 0.08)`).
+2. **Elevated Containers (Level 1)**: Interactive cards and modules feature a subtle, high-spread administrative shadow: `0 1px 3px rgba(16, 42, 67, 0.05), 0 1px 2px rgba(16, 42, 67, 0.03)`, keeping interfaces crisp and legible in high ambient glare.
+3. **Overlays & Drawers (Level 2)**: Modals, filter bottom sheets, and status drawers use a focused elevation: `0 8px 24px -4px rgba(16, 42, 67, 0.12)`, paired with a tinted backdrop scrim (`rgba(16, 42, 67, 0.4)`).
+
+## Shapes
+
+The design system implements a controlled, soft corner radius (Level 1):
+
+- Standard components (buttons, text inputs, incident cards, filter tabs): `0.25rem` (4px).
+- Larger layout surfaces, modals, and container shells (`rounded-lg`): `0.5rem` (8px).
+- Micro-elements such as notification dots or counter badges use full circular pills to distinguish status markers from actionable rectangular targets.
+
+This deliberate constraint maintains a disciplined, bureaucratic precision while softening edges just enough for comfortable finger interaction on mobile glass.
+
+## Components
+
+### Buttons
+- **Primary**: Solid Deep Navy (`#102A43`) background, `#FFFFFF` text, `4px` radius. Active state scales to `#0B1D2F`. Minimum height 48px for mobile tap accessibility.
+- **Secondary**: Outlined 1.5px `#102A43` with `#102A43` text, transparent background. Hover brings an `#E8F5EC` or `#F5F7FA` tint.
+- **Urgent / Accent**: Solid Saffron (`#F2A541`) background with `#102A43` text for civic warnings and escalation prompts.
+
+### Chips & Status Badges
+Status chips convey municipal processing stages with strict color pairing:
+- **Submitted / Pending**: Neutral slate border, `#F5F7FA` surface, `#253746` text.
+- **In-Progress / Investigation**: `#F2A541` border and 12% tint background with `#8A5208` text.
+- **Resolved / Verified**: Civic Green `#168B55` text with `#E8F5EC` surface and `#168B55` border.
+- All badges feature `label-sm` uppercase text with `0.05em` letter-spacing and 4px border radius.
+
+### Input Fields
+Inputs feature a 1px solid border (`#CBD5E1`), 48px height, 12px horizontal padding, `#FFFFFF` surface, and `body-md` typography. On focus, the border transitions to a 2px `#102A43` outline with zero fuzzy ring glow. Validation errors switch to a crisp 1.5px crimson red border with associated error labels directly below.
+
+### Cards & Ticket Lists
+- **Incident Cards**: Composed of a pure white background, 1px border (`rgba(16, 42, 67, 0.08)`), Level 1 elevation, and 16px internal padding. 
+- Left-edge accents utilize a 4px solid color stripe matching current incident priority or status (e.g., Green for resolved, Saffron for under review).
+- List rows feature 1px bottom dividers (`#E2E8F0`) with trailing metadata (Ward number, SLA countdown, and category icon).
+
+### Checkboxes & Radios
+Square (checkbox) and circular (radio) controls with 20px hit zones inside 48px touch bounding boxes. Checked states fill with `#102A43` displaying a crisp white mark.

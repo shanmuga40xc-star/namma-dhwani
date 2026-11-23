@@ -1,0 +1,434 @@
+{
+  "entities": {
+    "AppConfig": {
+      "title": "AppConfig",
+      "description": "Global platform configuration and one-time Super Admin bootstrap lock.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "demoMode": { "type": "boolean" },
+        "aiImageBlockingEnabled": { "type": "boolean" },
+        "bootstrapCompleted": { "type": "boolean" },
+        "ownerUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "updatedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "cmOfficeEmail": { "type": "string", "maxLength": 200 },
+        "pointsConfig": { "type": "object" }
+      },
+      "required": ["id", "updatedAt"]
+    },
+    "Constituency": {
+      "title": "Constituency",
+      "description": "Bengaluru assembly constituency boundary and official MLA office metadata.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "code": { "type": "string", "minLength": 2, "maxLength": 64 },
+        "bounds": { "type": "object" },
+        "polygonJson": { "type": "string", "maxLength": 100000 },
+        "mlaName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "mlaOfficeEmail": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "officeContactNote": { "type": "string", "maxLength": 240 },
+        "lastVerifiedDate": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "isDemo": { "type": "boolean" },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["id", "name", "code", "bounds", "mlaName", "mlaOfficeEmail", "lastVerifiedDate", "isDemo", "updatedAt"]
+    },
+    "Agency": {
+      "title": "Agency",
+      "description": "Bengaluru public agency contact (civic body, water board, electricity, traffic police, sanitation).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "agencyType": { "type": "string", "enum": ["civic_body", "water_board", "electricity", "traffic_police", "sanitation"] },
+        "constituencyIds": { "type": "array" },
+        "officialEmail": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "jurisdictionNote": { "type": "string", "maxLength": 240 },
+        "isDemo": { "type": "boolean" },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["id", "name", "agencyType", "constituencyIds", "officialEmail", "isDemo", "updatedAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Official Admin Portal account invited by Super Admin (no public signup).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "role": { "type": "string", "enum": ["mla_owner", "mla_member", "cm_office", "welfare_reviewer", "super_admin"] },
+        "constituencyId": { "type": "string", "maxLength": 64 },
+        "constituencyName": { "type": "string", "maxLength": 160 },
+        "department": { "type": "string", "maxLength": 120 },
+        "invitedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "totpEnrolled": { "type": "boolean" },
+        "active": { "type": "boolean" },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["uid", "email", "displayName", "role", "invitedByUid", "totpEnrolled", "active", "isDemo", "createdAt", "updatedAt"]
+    },
+    "CitizenProfile": {
+      "title": "CitizenProfile",
+      "description": "Citizen profile for Citizen App only (no Aadhaar or OTPs; DPDP-compliant).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "role": { "type": "string", "enum": ["citizen"] },
+        "preferredLanguage": { "type": "string", "enum": ["en", "kn", "hi", "ta", "te"] },
+        "simpleMode": { "type": "boolean" },
+        "guideBotEnabled": { "type": "boolean" },
+        "verificationStatus": { "type": "string", "enum": ["Not verified", "Pending", "Verified", "Manual review"] },
+        "consentDpdpAccepted": { "type": "boolean" },
+        "consentDpdpAcceptedAt": { "type": "string", "maxLength": 64 },
+        "shareContactWithMla": { "type": "boolean" },
+        "lastReportedAt": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["uid", "displayName", "role", "preferredLanguage", "simpleMode", "guideBotEnabled", "verificationStatus", "consentDpdpAccepted", "shareContactWithMla", "createdAt", "updatedAt"]
+    },
+    "CitizenPrivate": {
+      "title": "CitizenPrivate",
+      "description": "Isolated DPDP private contact details (only shared with MLA office on explicit consent).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["uid", "email", "updatedAt"]
+    },
+    "PublicCitizen": {
+      "title": "PublicCitizen",
+      "description": "Strictly non-PII public civic contributor summary for the Citizen App leaderboard and neighbour contributions.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "reportsCount": { "type": "number" },
+        "confirmedCount": { "type": "number" },
+        "supportsCount": { "type": "number" },
+        "neighbourConfirmsCount": { "type": "number" },
+        "createdAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["uid", "displayName", "reportsCount", "confirmedCount", "supportsCount", "neighbourConfirmsCount", "createdAt", "updatedAt"]
+    },
+    "Complaint": {
+      "title": "Complaint",
+      "description": "Public civic issue report routed automatically by GPS across Karnataka.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 3, "maxLength": 180 },
+        "description": { "type": "string", "minLength": 4, "maxLength": 2500 },
+        "originalLanguage": { "type": "string", "enum": ["en", "kn", "hi", "ta", "te"] },
+        "originalText": { "type": "string", "maxLength": 2500 },
+        "englishTranslation": { "type": "string", "maxLength": 2500 },
+        "category": { "type": "string", "enum": ["Potholes", "Garbage accumulation", "Water leakage", "Broken streetlights", "Other civic issue"] },
+        "aiSuggestedCategory": { "type": "string", "enum": ["Potholes", "Garbage accumulation", "Water leakage", "Broken streetlights", "Other civic issue"] },
+        "severity": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
+        "aiSuggestedSeverity": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
+        "aiSuggestedTitle": { "type": "string", "maxLength": 180 },
+        "aiSuggestedDescription": { "type": "string", "maxLength": 2500 },
+        "aiSuggestionAccepted": { "type": "boolean" },
+        "aiBackgroundStatus": { "type": "string", "enum": ["pending", "completed", "unavailable"] },
+        "aiDraftReply": { "type": "string", "maxLength": 1500 },
+        "aiCommunityBrief": { "type": "string", "maxLength": 1500 },
+        "aiFixAssessment": { "type": "object" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "localityName": { "type": "string", "maxLength": 160 },
+        "addressLabel": { "type": "string", "maxLength": 280 },
+        "constituencyId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "constituencyName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "assignedMlaName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "nearBoundary": { "type": "boolean" },
+        "boundaryFlagged": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Reported", "Acknowledged", "In progress", "Fixed, awaiting confirmation", "CONFIRMED RESOLVED", "Reopened", "Rejected", "Unattended"] },
+        "confirmedByLabel": { "type": "string", "enum": ["reporter", "confirmed by neighbours"] },
+        "rejectionReason": { "type": "string", "maxLength": 500 },
+        "isAnonymous": { "type": "boolean" },
+        "reporterUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "reporterDisplayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "shareContactConsent": { "type": "boolean" },
+        "priorityScore": { "type": "number" },
+        "priorityFactors": { "type": "array" },
+        "upvoteCount": { "type": "number" },
+        "upvoterUids": { "type": "array" },
+        "clusterId": { "type": "string", "maxLength": 64 },
+        "duplicateParentId": { "type": "string", "maxLength": 64 },
+        "photoUrl": { "type": "string", "maxLength": 1000 },
+        "photoDataUrl": { "type": "string", "maxLength": 450000 },
+        "afterPhotoDataUrl": { "type": "string", "maxLength": 450000 },
+        "mediaAuth": { "type": "object" },
+        "audioRetained": { "type": "boolean" },
+        "forwardedAgencyId": { "type": "string", "maxLength": 64 },
+        "forwardedAgencyName": { "type": "string", "maxLength": 160 },
+        "escalatedToCm": { "type": "boolean" },
+        "escalationReason": { "type": "string", "maxLength": 500 },
+        "ownerLabel": { "type": "string", "maxLength": 160 },
+        "timeline": { "type": "array" },
+        "isDemo": { "type": "boolean" },
+        "createdAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "fixedAt": { "type": "string", "maxLength": 64 },
+        "fixedAtMs": { "type": "number" }
+      },
+      "required": ["id", "title", "description", "originalLanguage", "originalText", "englishTranslation", "category", "severity", "latitude", "longitude", "constituencyId", "constituencyName", "assignedMlaName", "nearBoundary", "boundaryFlagged", "status", "isAnonymous", "reporterUid", "reporterDisplayName", "shareContactConsent", "priorityScore", "priorityFactors", "upvoteCount", "upvoterUids", "audioRetained", "escalatedToCm", "ownerLabel", "timeline", "isDemo", "createdAt", "updatedAt"]
+    },
+    "AreaCluster": {
+      "title": "AreaCluster",
+      "description": "Tier 2 (100m-500m) related-issue area cluster for escalation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "constituencyId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "category": { "type": "string" },
+        "centroidLat": { "type": "number" },
+        "centroidLng": { "type": "number" },
+        "radiusMeters": { "type": "number" },
+        "complaintIds": { "type": "array" },
+        "reportCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "escalated", "resolved"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "constituencyId", "category", "centroidLat", "centroidLng", "radiusMeters", "complaintIds", "reportCount", "status", "createdAt", "updatedAt"]
+    },
+    "DuplicatePair": {
+      "title": "DuplicatePair",
+      "description": "Labelled duplicate/distinct decision pair logged when a user overrides or confirms a Tier 1 match.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "primaryComplaintId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "candidateTitle": { "type": "string", "maxLength": 180 },
+        "candidateDescription": { "type": "string", "maxLength": 2500 },
+        "candidateCategory": { "type": "string", "maxLength": 80 },
+        "distanceMeters": { "type": "number" },
+        "textSimilarity": { "type": "number" },
+        "imageSimilarity": { "type": "number" },
+        "userDecision": { "type": "string", "enum": ["auto_upvoted", "different_problem"] },
+        "reporterUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "constituencyId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "primaryComplaintId", "distanceMeters", "userDecision", "reporterUid", "constituencyId", "createdAt"]
+    },
+    "SeriousConcern": {
+      "title": "SeriousConcern",
+      "description": "Private serious concern (corruption/threat/safety risk). Never shown on public feed or map.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 3, "maxLength": 180 },
+        "description": { "type": "string", "minLength": 6, "maxLength": 3000 },
+        "originalLanguage": { "type": "string", "enum": ["en", "kn", "hi", "ta", "te"] },
+        "englishTranslation": { "type": "string", "maxLength": 3000 },
+        "concernType": { "type": "string", "enum": ["corruption", "safety_threat", "official_misconduct", "urgent_hazard"] },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "localityName": { "type": "string", "maxLength": 160 },
+        "constituencyId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "constituencyName": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "targetMlaName": { "type": "string", "maxLength": 120 },
+        "directToCm": { "type": "boolean" },
+        "isAnonymous": { "type": "boolean" },
+        "reporterUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "status": { "type": "string", "enum": ["Submitted privately", "Under review", "Escalated to CM Office", "Closed"] },
+        "lastChangedBy": { "type": "string", "maxLength": 160 },
+        "officialResponseNote": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "description", "originalLanguage", "englishTranslation", "concernType", "latitude", "longitude", "constituencyId", "constituencyName", "targetMlaName", "directToCm", "isAnonymous", "reporterUid", "status", "lastChangedBy", "createdAt", "updatedAt"]
+    },
+    "BoundaryFlag": {
+      "title": "BoundaryFlag",
+      "description": "Citizen flag reporting a suspected wrong constituency boundary match.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "matchedConstituencyId": { "type": "string" },
+        "matchedConstituencyName": { "type": "string" },
+        "citizenNote": { "type": "string", "maxLength": 500 },
+        "reportedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "status": { "type": "string", "enum": ["open", "resolved"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "latitude", "longitude", "matchedConstituencyId", "matchedConstituencyName", "reportedByUid", "status", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable audit log of staff actions and sensitive data access.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "actorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "actorEmail": { "type": "string", "maxLength": 200 },
+        "actorRole": { "type": "string", "maxLength": 40 },
+        "action": { "type": "string", "maxLength": 120 },
+        "targetCollection": { "type": "string", "maxLength": 64 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "constituencyId": { "type": "string", "maxLength": 64 },
+        "summary": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "actorUid", "actorEmail", "actorRole", "action", "targetCollection", "targetId", "summary", "createdAt"]
+    },
+    "DemoEmailLog": {
+      "title": "DemoEmailLog",
+      "description": "Local demo-mode email notification log replacing real emails during development.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "recipientEmail": { "type": "string", "maxLength": 200 },
+        "subject": { "type": "string", "maxLength": 240 },
+        "previewText": { "type": "string", "maxLength": 1000 },
+        "relatedId": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "recipientEmail", "subject", "previewText", "createdAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Private in-app notification sent to a citizen when an issue is marked fixed or updated.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "recipientUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "complaintId": { "type": "string", "maxLength": 64 },
+        "concernId": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "body": { "type": "string", "maxLength": 1000 },
+        "type": { "type": "string", "enum": ["fix_awaiting_confirmation", "status_update", "concern_update", "confirmed_resolved", "welfare_update"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "readAt": { "type": "string" }
+      },
+      "required": ["id", "recipientUid", "title", "body", "type", "read", "createdAt"]
+    },
+    "CommunityComment": {
+      "title": "CommunityComment",
+      "description": "Public citizen social comment or ground photo verification note on a civic complaint (no PII).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "complaintId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "authorDisplayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "text": { "type": "string", "minLength": 2, "maxLength": 600 },
+        "kind": { "type": "string", "enum": ["comment", "ground_update", "fix_check"] },
+        "createdAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["id", "complaintId", "authorUid", "authorDisplayName", "text", "kind", "createdAt"]
+    },
+    "BenefitClaim": {
+      "title": "BenefitClaim",
+      "description": "Citizen welfare benefit claim redeemed once available civic points reach 50 or more.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "benefitId": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "benefitTitle": { "type": "string", "minLength": 3, "maxLength": 180 },
+        "benefitCategory": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "department": { "type": "string", "minLength": 2, "maxLength": 160 },
+        "rewardValueLabel": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "citizenUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "citizenName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "pointsSpent": { "type": "number" },
+        "voucherCode": { "type": "string", "minLength": 6, "maxLength": 64 },
+        "constituencyId": { "type": "string", "maxLength": 64 },
+        "constituencyName": { "type": "string", "maxLength": 160 },
+        "householdNote": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["Claimed", "Approved & Issued", "Redeemed"] },
+        "reviewedBy": { "type": "string", "maxLength": 160 },
+        "officialNote": { "type": "string", "maxLength": 500 },
+        "claimedAt": { "type": "string", "minLength": 4, "maxLength": 64 },
+        "updatedAt": { "type": "string", "minLength": 4, "maxLength": 64 }
+      },
+      "required": ["id", "benefitId", "benefitTitle", "benefitCategory", "department", "rewardValueLabel", "citizenUid", "citizenName", "pointsSpent", "voucherCode", "status", "claimedAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/appConfig/{configId}": {
+      "schema": { "$ref": "#/entities/AppConfig" },
+      "description": "Platform settings and bootstrap lock."
+    },
+    "/constituencies/{constituencyId}": {
+      "schema": { "$ref": "#/entities/Constituency" },
+      "description": "Bengaluru constituency boundaries and MLA office metadata."
+    },
+    "/agencies/{agencyId}": {
+      "schema": { "$ref": "#/entities/Agency" },
+      "description": "Public agency directory."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Admin Portal accounts created solely by Super Admin."
+    },
+    "/citizens/{userId}": {
+      "schema": { "$ref": "#/entities/CitizenProfile" },
+      "description": "Citizen profiles (Citizen App only)."
+    },
+    "/citizens/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/CitizenPrivate" },
+      "description": "Private citizen contact info."
+    },
+    "/publicCitizens/{userId}": {
+      "schema": { "$ref": "#/entities/PublicCitizen" },
+      "description": "Non-PII public civic contributor summaries for community leaderboard and neighbour contributions."
+    },
+    "/complaints/{complaintId}": {
+      "schema": { "$ref": "#/entities/Complaint" },
+      "description": "Public civic reports routed by GPS across Bengaluru & Karnataka."
+    },
+    "/areaClusters/{clusterId}": {
+      "schema": { "$ref": "#/entities/AreaCluster" },
+      "description": "100m-500m area clusters."
+    },
+    "/duplicatePairs/{pairId}": {
+      "schema": { "$ref": "#/entities/DuplicatePair" },
+      "description": "Labelled duplicate/distinct pairs."
+    },
+    "/seriousConcerns/{concernId}": {
+      "schema": { "$ref": "#/entities/SeriousConcern" },
+      "description": "Private serious concerns (reporter + assigned MLA/CM + Super Admin only)."
+    },
+    "/boundaryFlags/{flagId}": {
+      "schema": { "$ref": "#/entities/BoundaryFlag" },
+      "description": "Boundary mismatch flags for Super Admin."
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable staff and sensitive-access audit trail."
+    },
+    "/demoEmailLogs/{logId}": {
+      "schema": { "$ref": "#/entities/DemoEmailLog" },
+      "description": "Demo-mode email notifications preview."
+    },
+    "/notifications/{notifId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Private citizen notifications for status updates and fix confirmations."
+    },
+    "/communityComments/{commentId}": {
+      "schema": { "$ref": "#/entities/CommunityComment" },
+      "description": "Public citizen comments and repair photo verification notes on complaints."
+    },
+    "/benefitClaims/{claimId}": {
+      "schema": { "$ref": "#/entities/BenefitClaim" },
+      "description": "Citizen welfare benefit claims & vouchers redeemed using civic points (50+ points)."
+    }
+  }
+}

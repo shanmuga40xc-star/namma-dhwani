@@ -1,0 +1,70 @@
+{
+  "lifecycle_state": "deployed_active",
+  "model_version": "v1.2.0-rf28",
+  "trained_at": "2026-11-17T14:37:57.298Z",
+  "dataset_summary": {
+    "total_rows": 720,
+    "train_rows": 540,
+    "test_rows": 180,
+    "split": "75% / 25%"
+  },
+  "metrics": {
+    "test_mae": 2.306,
+    "test_rmse": 3.14,
+    "test_r2": 0.9827,
+    "tier_accuracy": 0.8778,
+    "tier_macro_f1": 0.7934
+  },
+  "feature_importance": [
+    {
+      "feature": "severity_level",
+      "importance": 0.9691
+    },
+    {
+      "feature": "category_risk_weight",
+      "importance": 0.0131
+    },
+    {
+      "feature": "age_hours",
+      "importance": 0.0075
+    },
+    {
+      "feature": "unique_supports",
+      "importance": 0.0052
+    },
+    {
+      "feature": "duplicate_cluster_size",
+      "importance": 0.0042
+    },
+    {
+      "feature": "ward_avg_resolution_hours",
+      "importance": 0.0009
+    }
+  ],
+  "confusion_matrix": [
+    [
+      5,
+      7,
+      0,
+      0
+    ],
+    [
+      0,
+      53,
+      4,
+      0
+    ],
+    [
+      0,
+      5,
+      23,
+      5
+    ],
+    [
+      0,
+      0,
+      1,
+      77
+    ]
+  ]
+}

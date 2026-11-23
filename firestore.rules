@@ -1,0 +1,544 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function adminDocExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function adminData() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data;
+    }
+
+    function isDemoModeActive() {
+      return exists(/databases/$(database)/documents/appConfig/settings)
+        && get(/databases/$(database)/documents/appConfig/settings).data.demoMode == true;
+    }
+
+    function isDemoExampleAccount() {
+      return isSignedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.matches('^.*@example\\.com$')
+        && isDemoModeActive();
+    }
+
+    function isVerifiedAdmin() {
+      return isSignedIn()
+        && adminDocExists()
+        && adminData().get('active', true) == true
+        && (
+          request.auth.token.email_verified == true ||
+          (adminData().get('isDemo', false) == true && isDemoExampleAccount())
+        );
+    }
+
+    function isSuperAdmin() {
+      return isVerifiedAdmin() && adminData().role == 'super_admin';
+    }
+
+    function isCmOffice() {
+      return isVerifiedAdmin() && adminData().role == 'cm_office';
+    }
+
+    function isMlaStaffFor(constituencyId) {
+      return isVerifiedAdmin()
+        && (adminData().role == 'mla_owner' || adminData().role == 'mla_member')
+        && adminData().constituencyId == constituencyId;
+    }
+
+    function isCitizenOnly() {
+      return isVerifiedUser() && !adminDocExists();
+    }
+
+    function isInsideKarnatakaCoords(lat, lng) {
+      return lat is number && lng is number
+        && lat >= 11.500 && lat <= 18.550
+        && lng >= 74.000 && lng <= 78.650;
+    }
+
+    function isValidPublicCitizen(data, userId) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'reportsCount', 'confirmedCount',
+        'supportsCount', 'neighbourConfirmsCount', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'uid', 'displayName', 'reportsCount', 'confirmedCount',
+        'supportsCount', 'neighbourConfirmsCount', 'createdAt', 'updatedAt'
+      ])
+      && data.uid == userId
+      && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+      && data.reportsCount is number && data.reportsCount >= 0 && data.reportsCount <= 100000
+      && data.confirmedCount is number && data.confirmedCount >= 0 && data.confirmedCount <= 100000
+      && data.supportsCount is number && data.supportsCount >= 0 && data.supportsCount <= 100000
+      && data.neighbourConfirmsCount is number && data.neighbourConfirmsCount >= 0 && data.neighbourConfirmsCount <= 100000
+      && data.createdAt is string && data.createdAt.size() >= 4 && data.createdAt.size() <= 64
+      && data.updatedAt is string && data.updatedAt.size() >= 4 && data.updatedAt.size() <= 64;
+    }
+
+    function isValidLanguage(lang) {
+      return lang in ['en', 'kn', 'hi', 'ta', 'te'];
+    }
+
+    function isValidCategory(cat) {
+      return cat in ['Potholes', 'Garbage accumulation', 'Water leakage', 'Broken streetlights', 'Other civic issue'];
+    }
+
+    function isValidSeverity(sev) {
+      return sev in ['Low', 'Medium', 'High', 'Critical'];
+    }
+
+    function isValidComplaintStatus(st) {
+      return st in [
+        'Reported',
+        'Acknowledged',
+        'In progress',
+        'Fixed, awaiting confirmation',
+        'CONFIRMED RESOLVED',
+        'Reopened',
+        'Rejected',
+        'Unattended'
+      ];
+    }
+
+    // Health check probe
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+    }
+
+    // Platform config & bootstrap lock
+    match /appConfig/{configId} {
+      allow get, list: if true;
+      allow create: if isVerifiedUser()
+        && configId == 'bootstrap'
+        && !exists(/databases/$(database)/documents/appConfig/bootstrap)
+        && incoming().id == 'bootstrap'
+        && incoming().ownerUid == request.auth.uid
+        && incoming().bootstrapCompleted == true;
+      allow create, update: if isSuperAdmin()
+        && isValidId(configId)
+        && incoming().id == configId;
+      allow delete: if false;
+    }
+
+    // Public constituencies & agency contacts (read-only for citizens/public; Super Admin writes)
+    match /constituencies/{constituencyId} {
+      allow get, list: if true;
+      allow create, update: if isSuperAdmin()
+        && isValidId(constituencyId)
+        && incoming().id == constituencyId
+        && incoming().keys().hasAll(['id', 'name', 'code', 'bounds', 'mlaName', 'mlaOfficeEmail', 'lastVerifiedDate', 'isDemo', 'updatedAt'])
+        && incoming().name is string && incoming().name.size() >= 2 && incoming().name.size() <= 160;
+      allow delete: if isSuperAdmin();
+    }
+
+    match /agencies/{agencyId} {
+      allow get, list: if true;
+      allow create, update: if isSuperAdmin()
+        && isValidId(agencyId)
+        && incoming().id == agencyId
+        && incoming().keys().hasAll(['id', 'name', 'agencyType', 'constituencyIds', 'officialEmail', 'isDemo', 'updatedAt']);
+      allow delete: if isSuperAdmin();
+    }
+
+    // Admin users registry — NO public signup! Created only by Super Admin or first-run bootstrap lock
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (request.auth.uid == userId || isSuperAdmin() || isVerifiedAdmin());
+      allow list: if isVerifiedAdmin();
+      allow create: if isValidId(userId)
+        && incoming().uid == userId
+        && incoming().keys().hasAll(['uid', 'email', 'displayName', 'role', 'invitedByUid', 'totpEnrolled', 'active', 'isDemo', 'createdAt', 'updatedAt'])
+        && incoming().role in ['mla_owner', 'mla_member', 'cm_office', 'welfare_reviewer', 'super_admin']
+        && (
+          isSuperAdmin() ||
+          (
+            isVerifiedUser()
+            && request.auth.uid == userId
+            && incoming().role == 'super_admin'
+            && !exists(/databases/$(database)/documents/appConfig/bootstrap)
+            && getAfter(/databases/$(database)/documents/appConfig/bootstrap).data.ownerUid == request.auth.uid
+          )
+        );
+      allow update: if isValidId(userId)
+        && incoming().uid == userId
+        && (
+          (isSuperAdmin() && incoming().uid == existing().uid) ||
+          (
+            isVerifiedUser()
+            && request.auth.uid == userId
+            && incoming().role == 'super_admin'
+            && !exists(/databases/$(database)/documents/appConfig/bootstrap)
+            && getAfter(/databases/$(database)/documents/appConfig/bootstrap).data.ownerUid == request.auth.uid
+          ) ||
+          (
+            isVerifiedAdmin()
+            && request.auth.uid == userId
+            && incoming().uid == existing().uid
+            && incoming().role == existing().role
+            && incoming().active == existing().active
+            && incoming().diff(existing()).affectedKeys().hasOnly(['totpEnrolled', 'displayName', 'updatedAt'])
+          )
+        );
+      allow delete: if isSuperAdmin();
+    }
+
+    // Citizen profiles (Citizen App only — private PII remains isolated)
+    match /citizens/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (request.auth.uid == userId || isVerifiedAdmin());
+      allow list: if isSuperAdmin();
+      allow create: if isCitizenOnly()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && incoming().uid == request.auth.uid
+        && incoming().role == 'citizen'
+        && incoming().verificationStatus in ['Not verified', 'Pending', 'Verified']
+        && isValidLanguage(incoming().preferredLanguage)
+        && incoming().keys().hasAll(['uid', 'displayName', 'role', 'preferredLanguage', 'simpleMode', 'guideBotEnabled', 'verificationStatus', 'consentDpdpAccepted', 'shareContactWithMla', 'createdAt', 'updatedAt']);
+      allow update: if isValidId(userId)
+        && (
+          (
+            isCitizenOnly()
+            && request.auth.uid == userId
+            && incoming().uid == existing().uid
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'preferredLanguage', 'simpleMode', 'guideBotEnabled', 'consentDpdpAccepted', 'consentDpdpAcceptedAt', 'shareContactWithMla', 'verificationStatus', 'lastReportedAt', 'updatedAt'])
+          ) ||
+          isSuperAdmin()
+        );
+      allow delete: if isSignedIn() && request.auth.uid == userId;
+
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && isSignedIn() && (request.auth.uid == userId || isVerifiedAdmin());
+        allow create, update: if isCitizenOnly()
+          && isValidId(userId)
+          && isValidId(docId)
+          && request.auth.uid == userId
+          && incoming().uid == request.auth.uid;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
+    }
+
+    // Non-PII public civic contributor summaries for Citizen App leaderboard & neighbour visibility
+    match /publicCitizens/{userId} {
+      allow get, list: if true;
+      allow create: if isCitizenOnly()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidPublicCitizen(incoming(), userId);
+      allow update: if isValidId(userId)
+        && isValidPublicCitizen(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && (
+          (
+            isCitizenOnly()
+            && request.auth.uid == userId
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName',
+              'reportsCount',
+              'confirmedCount',
+              'supportsCount',
+              'neighbourConfirmsCount',
+              'updatedAt'
+            ])
+          ) ||
+          isSuperAdmin()
+        );
+      allow delete: if isValidId(userId) && (isSuperAdmin() || (isSignedIn() && request.auth.uid == userId));
+    }
+
+    // Public Civic Complaints with entire Karnataka check & strict THE GREEN RULE
+    match /complaints/{complaintId} {
+      allow get, list: if true;
+
+      allow create: if isCitizenOnly()
+        && isValidId(complaintId)
+        && incoming().id == complaintId
+        && incoming().reporterUid == request.auth.uid
+        && incoming().status == 'Reported'
+        && incoming().escalatedToCm == false
+        && incoming().upvoteCount == 0
+        && incoming().upvoterUids is list && incoming().upvoterUids.size() == 0
+        && isInsideKarnatakaCoords(incoming().latitude, incoming().longitude)
+        && isValidLanguage(incoming().originalLanguage)
+        && isValidCategory(incoming().category)
+        && isValidSeverity(incoming().severity)
+        && incoming().title is string && incoming().title.size() >= 3 && incoming().title.size() <= 180
+        && incoming().description is string && incoming().description.size() >= 4 && incoming().description.size() <= 2500
+        && incoming().keys().hasAll(['id', 'title', 'description', 'originalLanguage', 'originalText', 'englishTranslation', 'category', 'severity', 'latitude', 'longitude', 'constituencyId', 'constituencyName', 'assignedMlaName', 'nearBoundary', 'boundaryFlagged', 'status', 'isAnonymous', 'reporterUid', 'reporterDisplayName', 'shareContactConsent', 'priorityScore', 'priorityFactors', 'upvoteCount', 'upvoterUids', 'audioRetained', 'escalatedToCm', 'ownerLabel', 'timeline', 'isDemo', 'createdAt', 'updatedAt']);
+
+      allow update: if isValidId(complaintId)
+        && (!('id' in existing()) || incoming().id == existing().id)
+        && (!('reporterUid' in existing()) || incoming().reporterUid == existing().reporterUid)
+        && (!('constituencyId' in existing()) || incoming().constituencyId == existing().constituencyId)
+        && (
+          isValidComplaintStatus(incoming().status) ||
+          ('status' in existing() && incoming().status == existing().status)
+        )
+        && (
+          // Path A: Officials (MLA Office for this constituency, CM Office for escalated, or Super Admin)
+          // THE GREEN RULE: Officials can NEVER set status == 'CONFIRMED RESOLVED'!
+          (
+            (isMlaStaffFor(existing().get('constituencyId', '')) || isSuperAdmin() || (isCmOffice() && existing().get('escalatedToCm', false) == true))
+            && incoming().status != 'CONFIRMED RESOLVED'
+            && incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'rejectionReason', 'afterPhotoDataUrl', 'forwardedAgencyId', 'forwardedAgencyName',
+              'escalatedToCm', 'escalationReason', 'ownerLabel', 'timeline', 'priorityScore', 'priorityFactors',
+              'fixedAt', 'fixedAtMs', 'aiFixAssessment', 'aiDraftReply', 'aiCommunityBrief', 'aiBackgroundStatus', 'updatedAt'
+            ])
+          )
+          ||
+          // Path B: Reporter confirmation (Fixed -> CONFIRMED RESOLVED) OR Dispute (Fixed -> Reopened)
+          (
+            isCitizenOnly()
+            && existing().get('reporterUid', '') == request.auth.uid
+            && existing().get('isAnonymous', false) == false
+            && existing().get('status', '') == 'Fixed, awaiting confirmation'
+            && (
+              (incoming().status == 'CONFIRMED RESOLVED' && incoming().confirmedByLabel == 'reporter') ||
+              incoming().status == 'Reopened'
+            )
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'confirmedByLabel', 'timeline', 'ownerLabel', 'updatedAt'])
+          )
+          ||
+          // Path C: Neighbour confirmation (anonymous complaint OR >= 7 days since fixedAtMs)
+          (
+            isCitizenOnly()
+            && existing().get('status', '') == 'Fixed, awaiting confirmation'
+            && incoming().status == 'CONFIRMED RESOLVED'
+            && incoming().confirmedByLabel == 'confirmed by neighbours'
+            && (
+              existing().get('isAnonymous', false) == true ||
+              (existing().get('fixedAtMs', 0) is number && existing().get('fixedAtMs', 0) > 0 && request.time.toMillis() >= existing().get('fixedAtMs', 0) + 604800000)
+            )
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'confirmedByLabel', 'timeline', 'ownerLabel', 'updatedAt'])
+          )
+          ||
+          // Path D: Verified Citizen single upvote/like ("This affects me too")
+          (
+            isCitizenOnly()
+            && !(request.auth.uid in existing().get('upvoterUids', []))
+            && incoming().upvoteCount == existing().get('upvoteCount', 0) + 1
+            && incoming().upvoterUids.hasAll(existing().get('upvoterUids', []))
+            && incoming().upvoterUids.size() == existing().get('upvoterUids', []).size() + 1
+            && request.auth.uid in incoming().upvoterUids
+            && incoming().diff(existing()).affectedKeys().hasOnly(['upvoteCount', 'upvoterUids', 'priorityScore', 'priorityFactors', 'aiCommunityBrief', 'aiBackgroundStatus', 'updatedAt'])
+          )
+          ||
+          // Path E: Citizen flagging wrong constituency boundary
+          (
+            isCitizenOnly()
+            && incoming().boundaryFlagged == true
+            && incoming().diff(existing()).affectedKeys().hasOnly(['boundaryFlagged', 'updatedAt'])
+          )
+          ||
+          // Path F: Citizen enriching own report or attaching upvote-driven AI community brief without altering votes/status
+          (
+            isCitizenOnly()
+            && (!('status' in existing()) || incoming().status == existing().status)
+            && (
+              (existing().get('reporterUid', '') == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['aiBackgroundStatus', 'aiDraftReply', 'aiCommunityBrief', 'updatedAt'])) ||
+              (request.auth.uid in existing().get('upvoterUids', []) && incoming().diff(existing()).affectedKeys().hasOnly(['aiBackgroundStatus', 'aiCommunityBrief', 'updatedAt']))
+            )
+          )
+        );
+
+      allow delete: if isSuperAdmin() && existing().isDemo == true;
+    }
+
+    // Area clusters (Tier 2: 100m-500m)
+    match /areaClusters/{clusterId} {
+      allow get, list: if true;
+      allow create, update: if isVerifiedUser() && isValidId(clusterId) && incoming().id == clusterId;
+      allow delete: if isSuperAdmin();
+    }
+
+    function isValidCommunityComment(data, commentId) {
+      return data.keys().hasAll([
+        'id', 'complaintId', 'authorUid', 'authorDisplayName', 'text', 'kind', 'createdAt'
+      ])
+      && data.keys().hasOnly([
+        'id', 'complaintId', 'authorUid', 'authorDisplayName', 'text', 'kind', 'createdAt'
+      ])
+      && data.id == commentId
+      && isValidId(data.complaintId)
+      && data.authorUid == request.auth.uid
+      && data.authorDisplayName is string && data.authorDisplayName.size() >= 1 && data.authorDisplayName.size() <= 120
+      && data.text is string && data.text.size() >= 2 && data.text.size() <= 600
+      && data.kind in ['comment', 'ground_update', 'fix_check']
+      && data.createdAt is string && data.createdAt.size() >= 4 && data.createdAt.size() <= 64;
+    }
+
+    // Public community comments & ground repair verification notes (non-PII)
+    match /communityComments/{commentId} {
+      allow get, list: if true;
+      allow create: if isCitizenOnly()
+        && isValidId(commentId)
+        && isValidCommunityComment(incoming(), commentId)
+        && exists(/databases/$(database)/documents/complaints/$(incoming().complaintId));
+      allow update: if false;
+      allow delete: if isSuperAdmin()
+        || (isCitizenOnly() && isValidId(commentId) && existing().authorUid == request.auth.uid);
+    }
+
+    // Labelled duplicate / distinct pairs
+    match /duplicatePairs/{pairId} {
+      allow get, list: if isVerifiedAdmin();
+      allow create: if isCitizenOnly()
+        && isValidId(pairId)
+        && incoming().id == pairId
+        && incoming().reporterUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Private Serious Concerns — NEVER public!
+    match /seriousConcerns/{concernId} {
+      allow get: if isValidId(concernId) && (
+        (isCitizenOnly() && existing().get('reporterUid', '') == request.auth.uid) ||
+        isSuperAdmin() ||
+        (isMlaStaffFor(existing().get('constituencyId', '')) && existing().get('directToCm', false) == false) ||
+        (isCmOffice() && (existing().get('directToCm', false) == true || existing().get('status', '') == 'Escalated to CM Office'))
+      );
+      allow list: if (
+        (isCitizenOnly() && resource.data.reporterUid == request.auth.uid) ||
+        isSuperAdmin() ||
+        (isMlaStaffFor(resource.data.constituencyId) && resource.data.directToCm == false) ||
+        (isCmOffice() && (resource.data.directToCm == true || resource.data.status == 'Escalated to CM Office'))
+      );
+      allow create: if isCitizenOnly()
+        && isValidId(concernId)
+        && incoming().id == concernId
+        && incoming().reporterUid == request.auth.uid
+        && incoming().status == 'Submitted privately'
+        && isInsideKarnatakaCoords(incoming().latitude, incoming().longitude);
+      allow update: if isValidId(concernId)
+        && (!('id' in existing()) || incoming().id == existing().id)
+        && (!('reporterUid' in existing()) || incoming().reporterUid == existing().reporterUid)
+        && incoming().status in ['Submitted privately', 'Under review', 'Escalated to CM Office', 'Closed']
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'lastChangedBy', 'officialResponseNote', 'updatedAt'])
+        && (
+          isSuperAdmin() ||
+          (isMlaStaffFor(existing().get('constituencyId', '')) && existing().get('directToCm', false) == false) ||
+          (isCmOffice() && (existing().get('directToCm', false) == true || existing().get('status', '') == 'Escalated to CM Office'))
+        );
+      allow delete: if false;
+    }
+
+    // Boundary flags
+    match /boundaryFlags/{flagId} {
+      allow get, list: if isSuperAdmin();
+      allow create: if isCitizenOnly() && isValidId(flagId) && incoming().reportedByUid == request.auth.uid;
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // Immutable audit logs
+    match /auditLogs/{logId} {
+      allow get, list: if isSuperAdmin() || isCmOffice();
+      allow create: if (isVerifiedUser() || isVerifiedAdmin()) && isValidId(logId) && incoming().id == logId && incoming().actorUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Demo email logs (development inspection only)
+    match /demoEmailLogs/{logId} {
+      allow get, list: if isVerifiedAdmin();
+      allow create: if (isVerifiedUser() || isVerifiedAdmin()) && isValidId(logId) && incoming().id == logId;
+      allow update: if false;
+      allow delete: if isSuperAdmin();
+    }
+
+    // Private Citizen Notifications (readable/updatable ONLY by recipientUid)
+    match /notifications/{notifId} {
+      allow get: if isSignedIn() && isValidId(notifId) && existing().recipientUid == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.recipientUid == request.auth.uid;
+      allow create: if (isVerifiedAdmin() || isCitizenOnly())
+        && isValidId(notifId)
+        && incoming().id == notifId
+        && incoming().read == false
+        && incoming().keys().hasAll(['id', 'recipientUid', 'title', 'body', 'type', 'read', 'createdAt']);
+      allow update: if isSignedIn()
+        && isValidId(notifId)
+        && existing().recipientUid == request.auth.uid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['read', 'readAt']);
+      allow delete: if isSignedIn() && isValidId(notifId) && existing().recipientUid == request.auth.uid;
+    }
+
+    function isValidBenefitClaim(data, claimId) {
+      return data.keys().hasAll([
+        'id', 'benefitId', 'benefitTitle', 'benefitCategory', 'department',
+        'rewardValueLabel', 'citizenUid', 'citizenName', 'pointsSpent',
+        'voucherCode', 'status', 'claimedAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'id', 'benefitId', 'benefitTitle', 'benefitCategory', 'department',
+        'rewardValueLabel', 'citizenUid', 'citizenName', 'pointsSpent',
+        'voucherCode', 'constituencyId', 'constituencyName', 'householdNote',
+        'status', 'reviewedBy', 'officialNote', 'claimedAt', 'updatedAt'
+      ])
+      && data.id == claimId
+      && data.benefitId is string && data.benefitId.size() >= 2 && data.benefitId.size() <= 80
+      && data.benefitTitle is string && data.benefitTitle.size() >= 3 && data.benefitTitle.size() <= 180
+      && data.benefitCategory is string && data.benefitCategory.size() >= 2 && data.benefitCategory.size() <= 80
+      && data.department is string && data.department.size() >= 2 && data.department.size() <= 160
+      && data.rewardValueLabel is string && data.rewardValueLabel.size() >= 2 && data.rewardValueLabel.size() <= 120
+      && data.citizenUid is string && data.citizenUid.size() >= 1 && data.citizenUid.size() <= 128
+      && data.citizenName is string && data.citizenName.size() >= 1 && data.citizenName.size() <= 120
+      && data.pointsSpent is number && data.pointsSpent >= 50 && data.pointsSpent <= 10000
+      && data.voucherCode is string && data.voucherCode.size() >= 6 && data.voucherCode.size() <= 64
+      && data.status in ['Claimed', 'Approved & Issued', 'Redeemed']
+      && (!('householdNote' in data) || (data.householdNote is string && data.householdNote.size() <= 300))
+      && (!('officialNote' in data) || (data.officialNote is string && data.officialNote.size() <= 500))
+      && (!('reviewedBy' in data) || (data.reviewedBy is string && data.reviewedBy.size() <= 160))
+      && data.claimedAt is string && data.claimedAt.size() >= 4 && data.claimedAt.size() <= 64
+      && data.updatedAt is string && data.updatedAt.size() >= 4 && data.updatedAt.size() <= 64;
+    }
+
+    // Citizen Welfare Benefit Claims (50+ civic points minimum, citizenUid isolated, official fulfillment)
+    match /benefitClaims/{claimId} {
+      allow get: if isValidId(claimId) && isSignedIn() && (existing().citizenUid == request.auth.uid || isVerifiedAdmin());
+      allow list: if isSignedIn() && (resource.data.citizenUid == request.auth.uid || isVerifiedAdmin());
+      allow create: if isCitizenOnly()
+        && isValidId(claimId)
+        && isValidBenefitClaim(incoming(), claimId)
+        && incoming().citizenUid == request.auth.uid
+        && incoming().status == 'Claimed'
+        && exists(/databases/$(database)/documents/citizens/$(request.auth.uid));
+      allow update: if isValidId(claimId)
+        && isValidBenefitClaim(incoming(), claimId)
+        && (isSuperAdmin() || (isVerifiedAdmin() && adminData().role == 'welfare_reviewer'))
+        && incoming().id == existing().id
+        && incoming().citizenUid == existing().citizenUid
+        && incoming().benefitId == existing().benefitId
+        && incoming().pointsSpent == existing().pointsSpent
+        && incoming().voucherCode == existing().voucherCode
+        && incoming().claimedAt == existing().claimedAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'reviewedBy', 'officialNote', 'updatedAt']);
+      allow delete: if isValidId(claimId) && isSuperAdmin();
+    }
+  }
+}

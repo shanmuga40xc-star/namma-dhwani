@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Public civic complaint photos (strict MIME and 5MB size cap)
+    match /complaints/{complaintId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    // Citizen private welfare documents (Steps 4): owner & reviewer department only
+    match /welfareDocs/{uid}/{fileName} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.uid == uid
+        && request.resource.size <= 5 * 1024 * 1024;
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "lifecycle_state": "deployed_active",
+  "model_version": "v2.0.0-cv30-mlp48",
+  "trained_at": "2026-11-17T14:37:57.298Z",
+  "dataset_summary": {
+    "total_samples": 2000,
+    "train_samples": 1400,
+    "val_samples": 300,
+    "test_samples": 300,
+    "split": "70% / 15% / 15%"
+  },
+  "class_labels": [
+    "Potholes",
+    "Garbage accumulation",
+    "Water leakage",
+    "Broken streetlights"
+  ],
+  "metrics": {
+    "test_accuracy": 1,
+    "macro_precision": 1,
+    "macro_recall": 1,
+    "macro_f1": 1,
+    "per_class": {
+      "Potholes": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 82
+      },
+      "Garbage accumulation": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 79
+      },
+      "Water leakage": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 80
+      },
+      "Broken streetlights": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 59
+      }
+    },
+    "severity_test_accuracy": 0.8467,
+    "severity_macro_f1": 0.8431
+  },
+  "confusion_matrix": [
+    [
+      82,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      79,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      80,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      59
+    ]
+  ],
+  "history": {
+    "epochs": [
+      1,
+      15,
+      30,
+      45,
+      60,
+      75,
+      90,
+      105,
+      120
+    ],
+    "train_loss": [
+      1.3895,
+      0.0069,
+      0.0022,
+      0.0015,
+      0.0015,
+      0.0018,
+      0.002,
+      0.0022,
+      0.0024
+    ],
+    "val_loss": [
+      0.881,
+      0.0058,
+      0.0023,
+      0.0015,
+      0.0016,
+      0.0018,
+      0.002,
+      0.0023,
+      0.0024
+    ],
+    "val_accuracy": [
+      0.92,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --civic-canvas: #F5F7FA;
+    --civic-surface: #FFFFFF;
+    --civic-surface-tonal: #ECF4FF;
+    --civic-primary: #102A43;
+    --civic-primary-deep: #00152A;
+    --civic-primary-hover: #0B1D2F;
+    --civic-secondary: #168B55;
+    --civic-secondary-tint: #E8F5EC;
+    --civic-tertiary: #F2A541;
+    --civic-tertiary-text: #8A5208;
+    --civic-error: #BA1A1A;
+    --civic-error-tint: #FFDAD6;
+    --civic-ink: #0A1D2B;
+    --civic-slate: #253746;
+    --civic-muted: #52606D;
+    --civic-border: rgba(16, 42, 67, 0.08);
+    --civic-input-border: #CBD5E1;
+  }
+
+  html {
+    font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--civic-canvas);
+    color: var(--civic-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Work Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  .font-mono-tabular {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Civic Authority Level 1 and Level 2 Shadows */
+.civic-shadow-1 {
+  box-shadow: 0 1px 3px rgba(16, 42, 67, 0.05), 0 1px 2px rgba(16, 42, 67, 0.03);
+}
+
+.civic-shadow-2 {
+  box-shadow: 0 8px 24px -4px rgba(16, 42, 67, 0.12);
+}
+
+/* Focus outline discipline matching Civic Authority input & control specs */
+.civic-input:focus {
+  outline: 2px solid #102A43;
+  outline-offset: -1px;
+  border-color: #102A43;
+}
+
+.civic-input-error {
+  border-color: #BA1A1A !important;
+  border-width: 1.5px !important;
+}
+
+.civic-input-error:focus {
+  outline: 2px solid #BA1A1A;
+  outline-offset: -1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Leaflet map container & custom marker discipline */
+.leaflet-container {
+  font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+  z-index: 1;
+}
+
+.nagrik-leaflet-pin {
+  background: transparent;
+  border: none;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  border: 1px solid rgba(16, 42, 67, 0.14);
+  box-shadow: 0 8px 24px -4px rgba(16, 42, 67, 0.16);
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+}
+
